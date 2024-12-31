@@ -1,20 +1,31 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from './store/hooks'; 
+import { RootState } from './store/store';
+import { updateProfile } from './store/slices/settings/settingsSlice'; 
 import { Sidebar } from './components/Layout/Sidebar';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { RecipientsPage } from './components/Recipients/RecipientsPage';
 import { SettingsPage } from './components/Settings/SettingsPage';
 import { type Recipient } from './types';
+import { FAQ } from './components/FAQ/FAQ';
 
-function App() {
+export function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const [settings, setSettings] = useState({
-    senderName: '',
-    senderEmail: '',
-    defaultSubject: '',
-    defaultMessage: '',
-    signature: '',
-  });
+  const settings = useSelector((state: RootState) => state.settings.profiles);
+  const dispatch = useAppDispatch();
+
+  const handleMergeRecipients = (emails: string[]) => {
+    // Keep only one recipient from the duplicates
+    const uniqueRecipient = recipients.find(r => r.email === emails[0]);
+    if (!uniqueRecipient) return;
+
+    // Remove all duplicates
+    setRecipients(prev => 
+      prev.filter(r => !emails.includes(r.email) || r.email === emails[0])
+    );
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -25,16 +36,20 @@ function App() {
             onDeleteRecipient={(email) => {
               setRecipients(prev => prev.filter(r => r.email !== email));
             }}
-            onImportRecipients={setRecipients}
+            onMergeRecipients={handleMergeRecipients}
           />
         );
       case 'settings':
         return (
           <SettingsPage
-            settings={settings}
-            onSave={setSettings}
+            profiles={settings}
+            onSave={(profiles) => {
+              profiles.forEach(profile => dispatch(updateProfile(profile)));
+            }}
           />
         );
+      case 'faq':
+        return <FAQ />;
       default:
         return (
           <Dashboard

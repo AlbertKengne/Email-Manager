@@ -1,22 +1,70 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { FileUpload } from "../FileUpload";
 import { EmailForm } from "../EmailForm";
 import { EmailPreview } from "../EmailPreview";
-import { type Recipient } from "../../types";
+import { EmailFormData, type Recipient } from "../../types/index";
 import { Users, Mail, Clock, ChevronUp, Globe } from "lucide-react";
-
+import { RootState } from "../../store/store";
+import { updateProfile } from '../../store/slices/settings/settingsSlice'; 
 interface DashboardProps {
   recipients: Recipient[];
   onImportRecipients: (recipients: Recipient[]) => void;
 }
 
 export function Dashboard({ recipients, onImportRecipients }: DashboardProps) {
-  const [subject, setSubject] = React.useState("");
-  const [message, setMessage] = React.useState("");
-  const [selectedCountries, setSelectedCountries] = React.useState<string[]>(
-    []
-  );
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
   
+  const profiles = useSelector((state: RootState) => state.settings.profiles);
+  const dispatch = useDispatch();
+
+  // Load default profile on mount
+  useEffect(() => {
+    const defaultProfile = profiles.find(p => p.isDefault);
+    if (defaultProfile) {
+      setCurrentProfileId(defaultProfile.id);
+      setSubject(defaultProfile.defaultSubject);
+      setMessage(defaultProfile.defaultMessage);
+    }
+  }, [profiles]);
+
+  const handleProfileChange = (profileId: string) => {
+    const selectedProfile = profiles.find(p => p.id === profileId);
+    if (selectedProfile) {
+      setCurrentProfileId(profileId);
+      setSubject(selectedProfile.defaultSubject);
+      setMessage(selectedProfile.defaultMessage);
+    }
+  };
+
+  const handleSubjectChange = (newSubject: string) => {
+    setSubject(newSubject);
+    if (currentProfileId) {
+      const currentProfile = profiles.find(p => p.id === currentProfileId);
+      if (currentProfile) {
+        dispatch(updateProfile({
+          ...currentProfile,
+          defaultSubject: newSubject
+        }));
+      }
+    }
+  };
+
+  const handleMessageChange = (newMessage: string) => {
+    setMessage(newMessage);
+    if (currentProfileId) {
+      const currentProfile = profiles.find(p => p.id === currentProfileId);
+      if (currentProfile) {
+        dispatch(updateProfile({
+          ...currentProfile,
+          defaultMessage: newMessage
+        }));
+      }
+    }
+  };
 
   // Extract unique countries and count recipients per country
   const countryStats = React.useMemo(() => {
@@ -36,13 +84,12 @@ export function Dashboard({ recipients, onImportRecipients }: DashboardProps) {
       }));
   }, [recipients]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: EmailFormData) => {
     const targetRecipients =
       selectedCountries.length > 0
         ? recipients.filter((r) => selectedCountries.includes(r.country || ""))
         : recipients;
-    console.log("Envoi des emails...", { targetRecipients });
+    console.log("Envoi des emails...", { targetRecipients, formData });
   };
 
   // Sample data - replace with real data
@@ -53,7 +100,7 @@ export function Dashboard({ recipients, onImportRecipients }: DashboardProps) {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow duration-200">
@@ -166,11 +213,14 @@ export function Dashboard({ recipients, onImportRecipients }: DashboardProps) {
           <EmailForm
             subject={subject}
             message={message}
+            profiles={profiles}
+            currentProfileId={currentProfileId}
+            onProfileChange={handleProfileChange}
             selectedCountries={selectedCountries}
             availableCountries={countryStats.map((s) => s.country)}
             disabled={recipients.length === 0}
-            onSubjectChange={setSubject}
-            onMessageChange={setMessage}
+            onSubjectChange={handleSubjectChange}
+            onMessageChange={handleMessageChange}
             onCountriesChange={setSelectedCountries}
             onSubmit={handleSubmit}
           />
@@ -180,6 +230,7 @@ export function Dashboard({ recipients, onImportRecipients }: DashboardProps) {
           <EmailPreview
             subject={subject}
             message={message}
+            signature={profiles.find(p => p.id === currentProfileId)?.signature}
             recipient={
               recipients[0] || {
                 name: "Example",

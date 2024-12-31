@@ -1,13 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { emailReducer } from './slices/email/emailSlice';
-import { recipientsReducer } from './slices/recipients/recipientsSlice';
 import { settingsReducer } from './slices/settings/settingsSlice';
+import { recipientsReducer } from './slices/recipients/recipientsSlice';
 
 export const store = configureStore({
   reducer: {
-    email: emailReducer,
-    recipients: recipientsReducer,
-    settings: settingsReducer
+    settings: settingsReducer,
+    recipients: recipientsReducer
   }
 });
 

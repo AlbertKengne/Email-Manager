@@ -1,4 +1,4 @@
-import { Mail, Users, Settings, BarChart } from "lucide-react";
+import { Mail, Users, Settings, BarChart, HelpCircle } from "lucide-react";
 import logoImage from "../../assets/images/Palons_de_business_logo.png";
 
 interface SidebarProps {
@@ -63,6 +63,19 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         >
           <Settings className="w-5 h-5" />
           <span className="font-medium">Paramètres</span>
+        </button>
+
+        <button
+          onClick={() => onNavigate("faq")}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+            ${
+              currentPage === "faq"
+                ? "bg-[#20AD96]/10 text-[#20AD96]"
+                : "text-gray-600 hover:bg-gray-50 hover:text-[#20AD96]"
+            }`}
+        >
+          <HelpCircle className="w-5 h-5" />
+          <span className="font-medium">FAQ</span>
         </button>
       </nav>
 

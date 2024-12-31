@@ -46,9 +46,10 @@ interface EmailPreviewProps {
   message: string;
   recipient: Recipient;
   sender?: typeof defaultSender;
+  signature?: string; // Add signature
 }
 
-export function EmailPreview({ subject, message, recipient, sender }: EmailPreviewProps) {
+export function EmailPreview({ subject, message, recipient, sender, signature }: EmailPreviewProps) {
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-all duration-200">
       <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
@@ -125,6 +126,15 @@ export function EmailPreview({ subject, message, recipient, sender }: EmailPrevi
         {message ? (
           <div className="whitespace-pre-wrap">
             {convertLinksToAnchors(message)}
+            
+            {/* Add signature section */}
+            {signature && (
+              <div className="mt-8 pt-4 border-t border-gray-200">
+                <div className="whitespace-pre-wrap text-gray-600">
+                  {convertLinksToAnchors(signature)}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-gray-400 italic">(Aucun contenu)</p>

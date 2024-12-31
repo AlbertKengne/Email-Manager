@@ -108,6 +108,7 @@ export function RecipientsPage({
           <Globe className="w-4 h-4" />
           {countryStats} pays
         </div>
+        
 
         <div className="relative">
           <input
